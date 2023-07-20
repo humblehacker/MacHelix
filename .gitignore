@@ -9,3 +9,4 @@ DerivedData/
 .netrc
 Build*.txt
 .build
+.compile

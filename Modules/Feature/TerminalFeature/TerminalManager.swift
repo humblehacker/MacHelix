@@ -49,8 +49,8 @@ public class TerminalManager: ObservableObject {
         holder.viewStore.send(.currentDirectoryChanged(homeDirectory))
         FileManager.default.changeCurrentDirectoryPath(homeDirectory.path)
 
-        let vars = Terminal.getEnvironmentVariables(termName: "xterm-color", trueColor: false, additionalVarsToCopy: ["SHELL"]).toVars()
-        term.startProcess(executable: "\(shell)", args: [], environment: vars, execName: "-\(shell)")
+        let vars = Terminal.getEnvironmentVariables(termName: "xterm-color", trueColor: true, additionalVarsToCopy: ["SHELL"])
+        term.startProcess(executable: shell, args: ["-l", "-c", "hx"], environment: vars.toVars())
 
         return term
     }
@@ -78,6 +78,8 @@ extension TerminalManager: LocalProcessTerminalViewDelegate {
     }
 
     public func processTerminated(source: SwiftTerm.TerminalView, exitCode: Int32?) {
+        print("process terminated: \(exitCode)")
+        exit(exitCode ?? 0)
     }
 }
 

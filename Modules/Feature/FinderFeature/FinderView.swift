@@ -6,7 +6,6 @@
 //
 
 import ComposableArchitecture
-import FinderFeature
 import SwiftUI
 
 public struct FinderView: View {
