@@ -14,7 +14,6 @@ extension Target.Dependency {
     )
 
     static let AppFeature: Self = "AppFeature"
-    static let FinderFeature: Self = "FinderFeature"
     static let TerminalFeature: Self = "TerminalFeature"
 }
 
@@ -22,13 +21,7 @@ extension Target {
     static let AppFeature = Target.target(
         "AppFeature",
         group: "Feature",
-        dependencies: [ .FinderFeature, .TerminalFeature ]
-    )
-
-    static let FinderFeature = Target.target(
-        "FinderFeature",
-        group: "Feature",
-        dependencies: [ .TCA ]
+        dependencies: [ .TerminalFeature ]
     )
 
     static let TerminalFeature = Target.target(
@@ -43,7 +36,6 @@ let package = Package(
     platforms: [ .macOS(.v13) ],
     products: [
         .library(name: Target.AppFeature.name, targets: [ .AppFeature ]),
-        .library(name: Target.FinderFeature.name, targets: [ .FinderFeature ]),
         .library(name: Target.TerminalFeature.name, targets: [ .TerminalFeature ])
     ],
     dependencies: [
@@ -56,7 +48,6 @@ let package = Package(
     ],
     targets: [
         .AppFeature,
-        .FinderFeature,
         .TerminalFeature
     ]
 )
