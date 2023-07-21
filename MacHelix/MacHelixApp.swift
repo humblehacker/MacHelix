@@ -26,6 +26,6 @@ struct HelixApp: App {
                 .task {
                     await store.send(.terminal(.start(args: args)))
                 }
-        }
+        }.windowStyle(HiddenTitleBarWindowStyle())
     }
 }
