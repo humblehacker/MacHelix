@@ -24,7 +24,7 @@ struct HelixApp: App {
         WindowGroup {
             ContentView(store: store)
                 .task {
-                    await store.send(.terminal(.start(args: args)))
+                    store.send(.terminal(.start(args: args)))
                 }
         }.windowStyle(HiddenTitleBarWindowStyle())
     }
