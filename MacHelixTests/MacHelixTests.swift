@@ -7,9 +7,9 @@
 //
 
 import XCTest
-@testable import Helix
+@testable import MacHelix
 
-final class HelixTests: XCTestCase {
+final class MacHelixTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

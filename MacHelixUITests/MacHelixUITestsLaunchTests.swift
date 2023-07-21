@@ -8,7 +8,7 @@
 
 import XCTest
 
-final class HelixUITestsLaunchTests: XCTestCase {
+final class MacHelixUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
