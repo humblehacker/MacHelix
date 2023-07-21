@@ -31,33 +31,51 @@ public class TerminalManager: ObservableObject {
     public init() {}
 
     func terminal(for uuid: UUID, store: StoreOf<TerminalFeature>) -> LocalProcessTerminalView {
-        if let holder = terminalsByUUID[uuid] {
+        if let holder = terminalHolder(uuid: uuid) {
             return holder.terminal
         }
 
         let term = LocalProcessTerminalView(frame: .zero)
         term.processDelegate = self
-
-        let env = ProcessInfo.processInfo.environment
-        let shell = env["SHELL"] ?? "/bin/zsh"
-
-        let holder = TerminalHolder(store: store, terminal: term)
-        terminalsByUUID[uuid] = holder
-        uuidsByTag[holder.tag] = uuid
-
-        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser
-        holder.viewStore.send(.currentDirectoryChanged(homeDirectory))
-        FileManager.default.changeCurrentDirectoryPath(homeDirectory.path)
-
-        let vars = Terminal.getEnvironmentVariables(termName: "xterm-color", trueColor: true, additionalVarsToCopy: ["SHELL"])
-        term.startProcess(executable: shell, args: ["-l", "-c", "hx"], environment: vars.toVars())
-
+        holdTerminal(store: store, term: term, uuid: uuid)
         return term
     }
 
+    func startTerm(uuid: UUID) {
+        guard let holder = terminalHolder(uuid: uuid) else { return }
+
+        let vars = Terminal.getEnvironmentVariables(termName: "xterm-color", trueColor: true, additionalVarsToCopy: ["SHELL"])
+        let args = ["-l", "-c", (["hx"] + holder.viewStore.startupArgs.dropFirst()).joined(separator: " ")]
+        let shell = shell()
+
+        print("launching \(shell) \(args)")
+
+        holder.terminal.startProcess(executable: shell, args: args, environment: vars.toVars())
+    }
+
+    private func holdTerminal(store: StoreOf<TerminalFeature>, term: LocalProcessTerminalView, uuid: UUID) {
+        let holder = TerminalHolder(store: store, terminal: term)
+        terminalsByUUID[uuid] = holder
+        uuidsByTag[holder.tag] = uuid
+    }
+
+    private func terminalHolder(uuid: UUID) -> TerminalHolder? {
+        terminalsByUUID[uuid]
+    }
+
+    private func terminalHolder(tag: ObjectIdentifier) -> TerminalHolder? {
+        guard let uuid = uuidsByTag[tag] else { return nil }
+        return terminalHolder(uuid: uuid)
+    }
+
+    private func shell() -> String {
+        let env = ProcessInfo.processInfo.environment
+        let shell = env["SHELL"] ?? "/bin/zsh"
+        return shell
+    }
+
     func viewStoreFromTerminal(terminal: SwiftTerm.TerminalView) -> ViewStoreOf<TerminalFeature>? {
-        let tag = ObjectIdentifier(terminal)
-        guard let uuid = uuidsByTag[tag], let holder = terminalsByUUID[uuid] else { return nil }
+        guard let holder = terminalHolder(tag: ObjectIdentifier(terminal)) else { return nil }
         return holder.viewStore
     }
 }

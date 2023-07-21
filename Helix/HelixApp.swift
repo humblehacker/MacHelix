@@ -14,10 +14,18 @@ import SwiftUI
 @main
 struct HelixApp: App {
     let store: StoreOf<AppFeature> = Store(initialState: AppFeature.State(), reducer: AppFeature())
+    let args: [String] = CommandLine.arguments
+
+    init() {
+        print(args)
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView(store: store)
+                .task {
+                    await store.send(.terminal(.start(args: args)))
+                }
         }
     }
 }
