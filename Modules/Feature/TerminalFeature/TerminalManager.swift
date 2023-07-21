@@ -73,11 +73,6 @@ public class TerminalManager: ObservableObject {
         let shell = env["SHELL"] ?? "/bin/zsh"
         return shell
     }
-
-    func viewStoreFromTerminal(terminal: SwiftTerm.TerminalView) -> ViewStoreOf<TerminalFeature>? {
-        guard let holder = terminalHolder(tag: ObjectIdentifier(terminal)) else { return nil }
-        return holder.viewStore
-    }
 }
 
 extension TerminalManager: LocalProcessTerminalViewDelegate {
@@ -90,13 +85,13 @@ extension TerminalManager: LocalProcessTerminalViewDelegate {
     public func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {
         guard
             let directory,
-            let viewStore = viewStoreFromTerminal(terminal: source)
+            let holder = terminalHolder(tag: ObjectIdentifier(source))
         else { return }
-        viewStore.send(.currentDirectoryChanged(URL(string: directory)!))
+        holder.viewStore.send(.currentDirectoryChanged(URL(string: directory)!))
     }
 
     public func processTerminated(source: SwiftTerm.TerminalView, exitCode: Int32?) {
-        print("process terminated: \(exitCode)")
+        print("process terminated: \(exitCode ?? 0)")
         exit(exitCode ?? 0)
     }
 }
