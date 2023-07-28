@@ -14,9 +14,12 @@ import SwiftUI
 @main
 struct HelixApp: App {
     let store: StoreOf<AppFeature> = Store(initialState: AppFeature.State(), reducer: AppFeature())
-    let args: [String] = CommandLine.arguments
+    var args: [String] = CommandLine.arguments
 
     init() {
+        if args[1] == "-NSDocumentRevisionsDebugMode" {
+            args.remove(atOffsets: IndexSet([1, 2]))
+        }
         print(args)
     }
 
