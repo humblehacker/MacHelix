@@ -16,6 +16,7 @@ public struct TerminalFeature: ReducerProtocol {
     public enum Action: Equatable {
         case start(args: [String])
         case currentDirectoryChanged(_ directory: URL)
+        case fileDropped(_ url: URL)
     }
 
     public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
@@ -27,9 +28,10 @@ public struct TerminalFeature: ReducerProtocol {
         case .start(args: let args):
             state.startupArgs = args
             let uuid = state.uuid
-            return .run { send in
-                await terminalManager.startTerm(uuid: uuid)
-            }
+            return .run { send in await terminalManager.startTerm(uuid: uuid) }
+
+        case .fileDropped(let url):
+            return .run { send in await terminalManager.openFile(url: url) }
         }
     }
 }

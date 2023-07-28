@@ -22,10 +22,18 @@ struct HelixApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(store: store)
-                .task {
-                    store.send(.terminal(.start(args: args)))
-                }
-        }.windowStyle(HiddenTitleBarWindowStyle())
+            WithViewStore(store) { viewStore in
+                ContentView(store: store)
+                    .task { store.send(.terminal(.start(args: args))) }
+                    .navigationTitle(viewStore.currentDocumentURL?.lastPathComponent ?? "MacHelix")
+                    .navigationDocument(viewStore.currentDocumentURL ?? URL(fileURLWithPath: ""))
+                    .dropDestination(for: URL.self) { items, location in
+                        guard let url = items.first else { return false }
+                        viewStore.send(.fileDropped(url))
+                        return true
+                    }
+            }
+        }
+        .windowStyle(.automatic)
     }
 }

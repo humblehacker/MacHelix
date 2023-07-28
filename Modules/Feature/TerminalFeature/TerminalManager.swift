@@ -1,10 +1,4 @@
-//
-//  TerminalManager.swift
-//  FileManager
-//
-//  Created by David Whetstone on 12/24/22.
-//
-
+import AppKit
 import Combine
 import ComposableArchitecture
 import Foundation
@@ -23,12 +17,19 @@ extension DependencyValues {
 
 @MainActor
 public class TerminalManager: ObservableObject {
+    let ipcManager: IPCManager
     var cancellables: Set<AnyCancellable> = []
     var terminalsByUUID: [UUID: TerminalHolder] = [:]
     var uuidsByTag: [ObjectIdentifier: UUID] = [:]
     var nextTag: Int = 0
 
-    public init() {}
+    public init() {
+        let pipePathPrefix: String = "\(Bundle.main.bundleIdentifier!).\(ProcessInfo.processInfo.processIdentifier)"
+        self.ipcManager = IPCManager(
+            inputPipeURL: URL(fileURLWithPath: "/tmp/\(pipePathPrefix).input.pipe"),
+            outputPipeURL: URL(fileURLWithPath: "/tmp/\(pipePathPrefix).output.pipe")
+        )
+    }
 
     func terminal(for uuid: UUID, store: StoreOf<TerminalFeature>) -> LocalProcessTerminalView {
         if let holder = terminalHolder(uuid: uuid) {
@@ -41,11 +42,18 @@ public class TerminalManager: ObservableObject {
         return term
     }
 
+    let helixPath = "/Users/david/src/helix/target/debug/hx"
+
     func startTerm(uuid: UUID) {
         guard let holder = terminalHolder(uuid: uuid) else { return }
 
         let vars = Terminal.getEnvironmentVariables(termName: "xterm-color", trueColor: true, additionalVarsToCopy: ["SHELL"])
-        let args = ["-l", "-c", (["hx"] + holder.viewStore.startupArgs.dropFirst()).joined(separator: " ")]
+        let ipcArgs = [
+            "--ipc-input \(ipcManager.inputPipeURL.path)",
+            "--ipc-output \(ipcManager.outputPipeURL.path)"
+        ]
+        let cmd = [helixPath] + holder.viewStore.startupArgs.dropFirst() + ipcArgs
+        let args = ["-l", "-c", cmd.joined(separator: " ")]
         let shell = shell()
 
         print("launching \(shell) \(args)")
@@ -53,6 +61,10 @@ public class TerminalManager: ObservableObject {
         holder.terminal.startProcess(executable: shell, args: args, environment: vars.toVars())
     }
 
+    func openFile(url: URL) {
+        ipcManager.sendMessage("openFile:\(url.path)")
+    }
+    
     private func holdTerminal(store: StoreOf<TerminalFeature>, term: LocalProcessTerminalView, uuid: UUID) {
         let holder = TerminalHolder(store: store, terminal: term)
         terminalsByUUID[uuid] = holder
@@ -75,12 +87,50 @@ public class TerminalManager: ObservableObject {
     }
 }
 
-extension TerminalManager: LocalProcessTerminalViewDelegate {
-    public func sizeChanged(source: SwiftTerm.LocalProcessTerminalView, newCols: Int, newRows: Int) {
+// TODO: this isn't really the right abstraction. The whole TerminalFeature and relation to helix needs to be rethought
+@MainActor
+class IPCManager {
+    let inputPipeURL: URL
+    let outputPipeURL: URL
+
+    init(inputPipeURL: URL, outputPipeURL: URL) {
+        self.inputPipeURL = inputPipeURL
+        self.outputPipeURL = outputPipeURL
+
+        createPipes()
+
+        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: nil) { [weak self] notification in
+            guard let self else { return }
+            self.sendMessage("exit")
+            self.removePipes()
+        }
     }
 
-    public func setTerminalTitle(source: SwiftTerm.LocalProcessTerminalView, title: String) {
+    private func createPipes() {
+        mkfifo(inputPipeURL.path, 0o700)
+        mkfifo(outputPipeURL.path, 0o700)
     }
+
+    private func removePipes() {
+        try? FileManager.default.removeItem(at: inputPipeURL)
+        try? FileManager.default.removeItem(at: outputPipeURL)
+    }
+
+    func sendMessage(_ message: String) {
+        let fileHandle = try! FileHandle(forWritingTo: inputPipeURL)
+        defer { try! fileHandle.close() }
+
+        let secData = message.data(using: .utf8)
+        if let secData = secData {
+            try! fileHandle.write(contentsOf: secData)
+        }
+    }
+}
+
+extension TerminalManager: LocalProcessTerminalViewDelegate {
+    public func sizeChanged(source: SwiftTerm.LocalProcessTerminalView, newCols: Int, newRows: Int) {}
+
+    public func setTerminalTitle(source: SwiftTerm.LocalProcessTerminalView, title: String) {}
 
     public func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {
         guard
