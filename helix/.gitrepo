@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:humblehacker/helix
+	branch = helix-ipc
+	commit = cc601a73698671f7f85c6a18aea2f987edf5b901
+	parent = 38218d49f1713e763fd9ee7dff2aa14dd06d9d78
+	method = rebase
+	cmdver = 0.4.6

@@ -1,0 +1,110 @@
+name: Build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  merge_group:
+  schedule:
+    - cron: '00 01 * * *'
+
+jobs:
+  check:
+    name: Check (msrv)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Install stable toolchain
+        uses: helix-editor/rust-toolchain@v1
+        with:
+          profile: minimal
+          override: true
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo check
+        run: cargo check
+
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    env:
+      RUST_BACKTRACE: 1
+      HELIX_LOG_LEVEL: info
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@1.65
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Cache test tree-sitter grammar
+        uses: actions/cache@v3
+        with:
+          path: runtime/grammars
+          key: ${{ runner.os }}-stable-v${{ env.CACHE_VERSION }}-tree-sitter-grammars-${{ hashFiles('languages.toml') }}
+          restore-keys: ${{ runner.os }}-stable-v${{ env.CACHE_VERSION }}-tree-sitter-grammars-
+
+      - name: Run cargo test
+        run: cargo test --workspace
+
+      - name: Run cargo integration-test
+        run: cargo integration-test
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+  lints:
+    name: Lints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@1.65
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo fmt
+        run: cargo fmt --all --check
+
+      - name: Run cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run cargo doc
+        run: cargo doc --no-deps --workspace --document-private-items
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@1.65
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Validate queries
+        run: cargo xtask query-check
+
+      - name: Generate docs
+        run: cargo xtask docgen
+
+      - name: Check uncommitted documentation changes
+        run: |
+          git diff
+          git diff-files --quiet \
+            || (echo "Run 'cargo xtask docgen', commit the changes and push again" \
+            && exit 1)
+
