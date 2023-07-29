@@ -35,18 +35,6 @@ actor IPCManager {
         }
     }
 
-    private func createPipes() {
-        guard let inputPipeURL = inputPipeURL, let outputPipeURL = outputPipeURL else { return }
-        mkfifo(inputPipeURL.path, 0o700)
-        mkfifo(outputPipeURL.path, 0o700)
-    }
-
-    private func removePipes() {
-        guard let inputPipeURL = inputPipeURL, let outputPipeURL = outputPipeURL else { return }
-        try? FileManager.default.removeItem(at: inputPipeURL)
-        try? FileManager.default.removeItem(at: outputPipeURL)
-    }
-
     func sendMessage(_ message: String) {
         guard let inputPipeURL = inputPipeURL else { return }
 
@@ -57,5 +45,17 @@ actor IPCManager {
         if let secData = secData {
             try! fileHandle.write(contentsOf: secData)
         }
+    }
+
+    private func createPipes() {
+        guard let inputPipeURL = inputPipeURL, let outputPipeURL = outputPipeURL else { return }
+        mkfifo(inputPipeURL.path, 0o700)
+        mkfifo(outputPipeURL.path, 0o700)
+    }
+
+    private func removePipes() {
+        guard let inputPipeURL = inputPipeURL, let outputPipeURL = outputPipeURL else { return }
+        try? FileManager.default.removeItem(at: inputPipeURL)
+        try? FileManager.default.removeItem(at: outputPipeURL)
     }
 }
