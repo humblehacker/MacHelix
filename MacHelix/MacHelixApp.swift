@@ -18,7 +18,7 @@ struct HelixApp: App {
     var body: some Scene {
         WindowGroup {
             WithViewStore(store) { viewStore in
-                ContentView(store: store.scope(state: \.helixState, action: AppFeature.Action.helix))
+                HelixView(store: store.scope(state: \.helixState, action: AppFeature.Action.helix))
                     .task { store.send(.helix(.start(args: args))) }
                     .navigationTitle(viewStore.currentDocumentURL?.lastPathComponent ?? "MacHelix")
                     .navigationDocument(viewStore.currentDocumentURL ?? URL(fileURLWithPath: ""))

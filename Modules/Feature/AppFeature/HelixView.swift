@@ -10,7 +10,7 @@ import SwiftUI
 import TerminalFeature
 import HelixFeature
 
-public struct ContentView: View {
+public struct HelixView: View {
     let store: StoreOf<HelixFeature>
 
     public init(store: StoreOf<HelixFeature>) {
@@ -29,7 +29,7 @@ public struct ContentView: View {
  struct ContentView_Previews: PreviewProvider {
      static var previews: some View {
          NavigationStack {
-             ContentView(
+             HelixView(
                 store: Store(
                     initialState: HelixFeature.State(),
                     reducer: HelixFeature()
