@@ -29,6 +29,18 @@ struct HelixApp: App {
                     }
             }
         }
-        .windowStyle(.automatic)
+        .commands {
+            CommandGroup(after: .sidebar) {
+                WithViewStore(store) { viewStore in
+                    Toggle("Mouse reporting enabled",
+                        isOn: viewStore.binding(
+                            get: \.mouseReportingEnabled,
+                            send: AppFeature.Action.mouseReportingToggled
+                        )
+                    )
+                }
+                Divider()
+            }
+        }
     }
 }

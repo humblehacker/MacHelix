@@ -36,7 +36,7 @@ public struct HelixFeature: ReducerProtocol {
             case .terminal(_):
                 return .none
 
-            case .start(args: let startupArgs):
+            case .start(let startupArgs):
                 let helixRoot = Bundle.main.bundleURL.appendingPathComponent("Contents/helix")
                 let helixPath = helixRoot.appendingPathComponent("bin/hx")
 

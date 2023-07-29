@@ -15,6 +15,7 @@ public struct AppFeature: ReducerProtocol {
     public init() {}
 
     public struct State: Equatable {
+        public var mouseReportingEnabled: Bool = true
         public var currentDocumentURL: URL?
         public var helixState: HelixFeature.State
         public init(helixState: HelixFeature.State = HelixFeature.State()) {
@@ -25,6 +26,7 @@ public struct AppFeature: ReducerProtocol {
     public enum Action: Equatable {
         case helix(HelixFeature.Action)
         case fileDropped(URL)
+        case mouseReportingToggled
     }
 
     public var body: some ReducerProtocol<State, Action> {
@@ -33,6 +35,10 @@ public struct AppFeature: ReducerProtocol {
 
         Reduce { state, action in
             switch action {
+
+            case .mouseReportingToggled:
+                state.mouseReportingEnabled.toggle()
+                return .send(.helix(.terminal(.mouseReportingChanged(enabled: state.mouseReportingEnabled))))
 
             case .helix(_):
                 return .none
@@ -44,6 +50,6 @@ public struct AppFeature: ReducerProtocol {
                     await send(.helix(.fileDropped(url)))
                 }
             }
-        }
+        }._printChanges()
     }
 }

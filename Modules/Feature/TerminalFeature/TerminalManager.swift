@@ -71,6 +71,11 @@ public class TerminalManager: ObservableObject {
         )
     }
 
+    public func setMouseReporting(enabled: Bool, uuid: UUID) {
+        guard let holder = terminalHolder(uuid: uuid) else { return }
+        holder.terminal.allowMouseReporting = enabled
+    }
+
     private func holdTerminal(store: StoreOf<TerminalFeature>, term: LocalProcessTerminalView, uuid: UUID) {
         let holder = TerminalHolder(store: store, terminal: term)
         terminalsByUUID[uuid] = holder
