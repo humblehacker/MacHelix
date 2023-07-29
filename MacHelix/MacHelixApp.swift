@@ -1,11 +1,3 @@
-//
-//  HelixApp.swift
-//  Helix
-//
-//  Created by David Whetstone on 7/20/23.
-//
-//
-
 import AppFeature
 import ComposableArchitecture
 import TerminalFeature
@@ -26,8 +18,8 @@ struct HelixApp: App {
     var body: some Scene {
         WindowGroup {
             WithViewStore(store) { viewStore in
-                ContentView(store: store)
-                    .task { store.send(.terminal(.start(args: args))) }
+                ContentView(store: store.scope(state: \.helixState, action: AppFeature.Action.helix))
+                    .task { store.send(.helix(.start(args: args))) }
                     .navigationTitle(viewStore.currentDocumentURL?.lastPathComponent ?? "MacHelix")
                     .navigationDocument(viewStore.currentDocumentURL ?? URL(fileURLWithPath: ""))
                     .dropDestination(for: URL.self) { items, location in

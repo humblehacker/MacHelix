@@ -1,10 +1,3 @@
-//
-//  TermView.swift
-//  FileManager
-//
-//  Created by David Whetstone on 12/23/22.
-//
-
 import Combine
 import ComposableArchitecture
 import SwiftTerm
@@ -31,11 +24,9 @@ struct TermView_Previews: PreviewProvider {
     static var previews: some View {
         TermView(
             store: Store(
-                initialState: TerminalFeature.State(currentDirectory: nil),
+                initialState: TerminalFeature.State(),
                 reducer: TerminalFeature()
             )
         )
     }
 }
-
-

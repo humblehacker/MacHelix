@@ -6,32 +6,21 @@ public struct TerminalFeature: ReducerProtocol {
     public init() {}
 
     public struct State: Equatable {
-        public var startupArgs: [String] = []
-        public var currentDirectory: URL?
         public let uuid: UUID = UUID()
 
-        public init(currentDirectory: URL? = nil) { self.currentDirectory = currentDirectory }
+        public init() {}
     }
 
     public enum Action: Equatable {
-        case start(args: [String])
-        case currentDirectoryChanged(_ directory: URL)
-        case fileDropped(_ url: URL)
+        case startShell(args: [String], env: [String: String])
     }
 
     public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
-        case .currentDirectoryChanged(let dir):
-            state.currentDirectory = dir
-            return .none
-
-        case .start(args: let args):
-            state.startupArgs = args
-            let uuid = state.uuid
-            return .run { send in await terminalManager.startTerm(uuid: uuid) }
-
-        case .fileDropped(let url):
-            return .run { send in await terminalManager.openFile(url: url) }
+        case .startShell(args: let args, env: let env):
+            return .run { [uuid = state.uuid] send in
+                await terminalManager.shell(uuid: uuid, args: args, environment: env)
+            }
         }
     }
 }

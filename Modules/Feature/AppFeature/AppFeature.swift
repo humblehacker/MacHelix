@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Foundation
 import TerminalFeature
+import HelixFeature
 
 public enum Position {
     case left
@@ -15,32 +16,32 @@ public struct AppFeature: ReducerProtocol {
 
     public struct State: Equatable {
         public var currentDocumentURL: URL?
-        public var terminalState: TerminalFeature.State
-        public init(terminalState: TerminalFeature.State = TerminalFeature.State()) {
-            self.terminalState = terminalState
+        public var helixState: HelixFeature.State
+        public init(helixState: HelixFeature.State = HelixFeature.State()) {
+            self.helixState = helixState
         }
     }
 
     public enum Action: Equatable {
-        case terminal(TerminalFeature.Action)
+        case helix(HelixFeature.Action)
         case fileDropped(URL)
     }
 
     public var body: some ReducerProtocol<State, Action> {
-        Scope(state: \.terminalState, action: /Action.terminal) { TerminalFeature() }
+        Scope(state: \.helixState, action: /Action.helix) { HelixFeature() }
             ._printChanges()
 
         Reduce { state, action in
             switch action {
 
-            case .terminal(_):
+            case .helix(_):
                 return .none
-                
+
             case .fileDropped(let url):
                 // TODO: setting currentDocumentURL here is temporary until IPC from hx is implemented
                 state.currentDocumentURL = url
                 return .run { send in
-                    await send(.terminal(.fileDropped(url)))
+                    await send(.helix(.fileDropped(url)))
                 }
             }
         }

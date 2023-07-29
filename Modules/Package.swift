@@ -15,19 +15,26 @@ extension Target.Dependency {
 
     static let AppFeature: Self = "AppFeature"
     static let TerminalFeature: Self = "TerminalFeature"
+    static let HelixFeature: Self = "HelixFeature"
 }
 
 extension Target {
     static let AppFeature = Target.target(
         "AppFeature",
         group: "Feature",
-        dependencies: [ .TerminalFeature ]
+        dependencies: [ .HelixFeature, .TerminalFeature ]
     )
 
     static let TerminalFeature = Target.target(
         "TerminalFeature",
         group: "Feature",
         dependencies: [ .TCA, .SwiftTerm ]
+    )
+
+    static let HelixFeature = Target.target(
+        "HelixFeature",
+        group: "Feature",
+        dependencies: [ .TCA, .TerminalFeature ]
     )
 }
 
@@ -36,6 +43,7 @@ let package = Package(
     platforms: [ .macOS(.v13) ],
     products: [
         .library(name: Target.AppFeature.name, targets: [ .AppFeature ]),
+        .library(name: Target.HelixFeature.name, targets: [ .HelixFeature ]),
         .library(name: Target.TerminalFeature.name, targets: [ .TerminalFeature ])
     ],
     dependencies: [
@@ -48,6 +56,7 @@ let package = Package(
     ],
     targets: [
         .AppFeature,
+        .HelixFeature,
         .TerminalFeature
     ]
 )
@@ -75,4 +84,3 @@ extension Product {
         library(name: name, type: type, targets: targets.map { $0.name })
     }
 }
-

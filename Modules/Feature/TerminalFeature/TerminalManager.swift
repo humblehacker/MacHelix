@@ -8,7 +8,7 @@ private enum TerminalManagerKey: DependencyKey {
     @MainActor static let liveValue = TerminalManager()
 }
 
-extension DependencyValues {
+public extension DependencyValues {
     var terminalManager: TerminalManager {
         get { self[TerminalManagerKey.self] }
         set { self[TerminalManagerKey.self] = newValue }
@@ -17,19 +17,10 @@ extension DependencyValues {
 
 @MainActor
 public class TerminalManager: ObservableObject {
-    let ipcManager: IPCManager
     var cancellables: Set<AnyCancellable> = []
     var terminalsByUUID: [UUID: TerminalHolder] = [:]
     var uuidsByTag: [ObjectIdentifier: UUID] = [:]
     var nextTag: Int = 0
-
-    public init() {
-        let pipePathPrefix: String = "\(Bundle.main.bundleIdentifier!).\(ProcessInfo.processInfo.processIdentifier)"
-        self.ipcManager = IPCManager(
-            inputPipeURL: URL(fileURLWithPath: "/tmp/\(pipePathPrefix).input.pipe"),
-            outputPipeURL: URL(fileURLWithPath: "/tmp/\(pipePathPrefix).output.pipe")
-        )
-    }
 
     func terminal(for uuid: UUID, store: StoreOf<TerminalFeature>) -> LocalProcessTerminalView {
         if let holder = terminalHolder(uuid: uuid) {
@@ -42,32 +33,44 @@ public class TerminalManager: ObservableObject {
         return term
     }
 
-    func startTerm(uuid: UUID) {
+    public func shell(
+        uuid: UUID,
+        args: [String] = [],
+        environment: [String: String]? = nil,
+        execName: String? = nil
+    ) {
+        startTerm(
+            uuid: uuid,
+            executable: shell(),
+            args: args,
+            environment: environment,
+            execName: execName
+        )
+    }
+
+    public func startTerm(
+        uuid: UUID,
+        executable: String,
+        args: [String] = [],
+        environment: [String: String]? = nil,
+        execName: String? = nil
+    ) {
         guard let holder = terminalHolder(uuid: uuid) else { return }
 
-        let helixRoot = Bundle.main.bundleURL.appendingPathComponent("Contents/helix")
-        let helixPath = helixRoot.appendingPathComponent("bin/hx")
+        var derivedEnvironment: [String: String] = [:]
+        if let environment {
+            derivedEnvironment = Terminal.getEnvironmentVariables(termName: "ansi", trueColor: true, other: ["SHELL"])
+                .merging(environment, uniquingKeysWith: { _, new in new })
+        }
 
-        var env = Terminal.getEnvironmentVariables(termName: "ansi", trueColor: true, additionalVarsToCopy: ["SHELL"])
-        env["HELIX_RUNTIME"] = helixRoot.appendingPathComponent("runtime").path
-
-        let additionalArgs: [String] = [
-            "--ipc-input \(ipcManager.inputPipeURL.path)",
-            "--ipc-output \(ipcManager.outputPipeURL.path)"
-        ]
-        let cmd = [helixPath.path] + holder.viewStore.startupArgs.dropFirst() + additionalArgs
-        let args = ["-l", "-c", cmd.joined(separator: " ")]
-        let shell = shell()
-
-        print("launching \(shell) \(args)")
-
-        holder.terminal.startProcess(executable: shell, args: args, environment: env.toVars())
+        holder.terminal.startProcess(
+            executable: executable,
+            args: args,
+            environment: derivedEnvironment.toVars(),
+            execName: execName
+        )
     }
 
-    func openFile(url: URL) {
-        ipcManager.sendMessage("openFile:\(url.path)")
-    }
-    
     private func holdTerminal(store: StoreOf<TerminalFeature>, term: LocalProcessTerminalView, uuid: UUID) {
         let holder = TerminalHolder(store: store, terminal: term)
         terminalsByUUID[uuid] = holder
@@ -90,57 +93,17 @@ public class TerminalManager: ObservableObject {
     }
 }
 
-// TODO: this isn't really the right abstraction. The whole TerminalFeature and relation to helix needs to be rethought
-@MainActor
-class IPCManager {
-    let inputPipeURL: URL
-    let outputPipeURL: URL
-
-    init(inputPipeURL: URL, outputPipeURL: URL) {
-        self.inputPipeURL = inputPipeURL
-        self.outputPipeURL = outputPipeURL
-
-        createPipes()
-
-        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: nil) { [weak self] notification in
-            guard let self else { return }
-            self.sendMessage("exit")
-            self.removePipes()
-        }
-    }
-
-    private func createPipes() {
-        mkfifo(inputPipeURL.path, 0o700)
-        mkfifo(outputPipeURL.path, 0o700)
-    }
-
-    private func removePipes() {
-        try? FileManager.default.removeItem(at: inputPipeURL)
-        try? FileManager.default.removeItem(at: outputPipeURL)
-    }
-
-    func sendMessage(_ message: String) {
-        let fileHandle = try! FileHandle(forWritingTo: inputPipeURL)
-        defer { try! fileHandle.close() }
-
-        let secData = message.data(using: .utf8)
-        if let secData = secData {
-            try! fileHandle.write(contentsOf: secData)
-        }
-    }
-}
-
 extension TerminalManager: LocalProcessTerminalViewDelegate {
     public func sizeChanged(source: SwiftTerm.LocalProcessTerminalView, newCols: Int, newRows: Int) {}
 
     public func setTerminalTitle(source: SwiftTerm.LocalProcessTerminalView, title: String) {}
 
     public func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {
-        guard
-            let directory,
-            let holder = terminalHolder(tag: ObjectIdentifier(source))
-        else { return }
-        holder.viewStore.send(.currentDirectoryChanged(URL(string: directory)!))
+//        guard
+//            let directory,
+//            let holder = terminalHolder(tag: ObjectIdentifier(source))
+//        else { return }
+//        holder.viewStore.send(.currentDirectoryChanged(URL(string: directory)!))
     }
 
     public func processTerminated(source: SwiftTerm.TerminalView, exitCode: Int32?) {
@@ -150,14 +113,15 @@ extension TerminalManager: LocalProcessTerminalViewDelegate {
 }
 
 extension Terminal {
-    public static func getEnvironmentVariables(termName: String? = nil, trueColor: Bool = true, additionalVarsToCopy: [String] = []) -> [String: String] {
+    // modified copy of Terminal.getEnvironmentVariables(termName:trueColor) in SwiftTerm
+    public static func getEnvironmentVariables(termName: String? = nil, trueColor: Bool = true, other: [String] = []) -> [String: String] {
         let localEnv: [String: String] = [
             "TERM": "\(termName ?? "xterm-256color")",
             "COLORTERM": trueColor ? "truecolor" : "",
             "LANG": "en_US.UTF-8" // Without this, tools like "vi" produce sequences that are not UTF-8 friendly
         ]
 
-        let varsToCopy = ["LOGNAME", "USER", "DISPLAY", "LC_TYPE", "USER", "HOME"] + additionalVarsToCopy
+        let varsToCopy = ["LOGNAME", "USER", "DISPLAY", "LC_TYPE", "USER", "HOME"] + other
         return ProcessInfo.processInfo.environment
                           .filter { varsToCopy.contains($0.key) }
                           .merging(localEnv, uniquingKeysWith: { l, r in l })

@@ -8,17 +8,18 @@
 import ComposableArchitecture
 import SwiftUI
 import TerminalFeature
+import HelixFeature
 
 public struct ContentView: View {
-    let store: StoreOf<AppFeature>
+    let store: StoreOf<HelixFeature>
 
-    public init(store: StoreOf<AppFeature>) {
+    public init(store: StoreOf<HelixFeature>) {
         self.store = store
     }
 
     public var body: some View {
         WithViewStore(store) { viewStore in
-            TermView(store: store.scope(state: \.terminalState, action: AppFeature.Action.terminal))
+            TermView(store: store.scope(state: \.terminalState, action: HelixFeature.Action.terminal))
                 .padding(4)
                 .background(Color.black)
         }
@@ -30,8 +31,8 @@ public struct ContentView: View {
          NavigationStack {
              ContentView(
                 store: Store(
-                    initialState: AppFeature.State(),
-                    reducer: AppFeature()
+                    initialState: HelixFeature.State(),
+                    reducer: HelixFeature()
                 )
              )
          }
