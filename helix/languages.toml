@@ -310,7 +310,7 @@ indent = { tab-width = 2, unit = "  " }
 name = "json"
 scope = "source.json"
 injection-regex = "json"
-file-types = ["json", "jsonc", "arb", "ipynb", "geojson"]
+file-types = ["json", "jsonc", "arb", "ipynb", "geojson", "gltf"]
 roots = []
 language-servers = [ "vscode-json-language-server" ]
 auto-format = true
@@ -2460,7 +2460,7 @@ indent = { tab-width = 4, unit = "    " }
 
 [[grammar]]
 name = "prql"
-source = { git = "https://github.com/PRQL/tree-sitter-prql", rev = "3f27cac466f030ee7d985d91eba5470e01dd21ea" }
+source = { git = "https://github.com/PRQL/tree-sitter-prql", rev = "09e158cd3650581c0af4c49c2e5b10c4834c8646" }
 
 [[language]]
 name = "po"
@@ -2698,3 +2698,15 @@ file-types = ["webc"]
 roots = []
 indent = { tab-width = 2, unit = "  " }
 grammar = "html"
+
+[[grammar]]
+name = "wren"
+source = { git = "https://git.sr.ht/~jummit/tree-sitter-wren", rev = "7f576e8ccadac226f6a37cbefe95be3fee9f0a66"}
+
+[[language]]
+name = "wren"
+scope = "source.wren"
+injection-regex = "wren"
+file-types = ["wren"]
+roots = []
+indent = { tab-width = 2, unit = "  "}
