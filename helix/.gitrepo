@@ -7,6 +7,6 @@
 	remote = git@github.com:humblehacker/helix
 	branch = helix-ipc
 	commit = 79287a91ec4b159ce1a248edeab45837047d7623
-	parent = bcc6879bb2bbdf300d8e99e2b0ecf552431467d8
+	parent = 3262399101bc5bad214aabc37f323f16b8e1870f
 	method = rebase
 	cmdver = 0.4.6
