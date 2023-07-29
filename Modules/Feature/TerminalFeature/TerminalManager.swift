@@ -42,23 +42,26 @@ public class TerminalManager: ObservableObject {
         return term
     }
 
-    let helixPath = "/Users/david/src/helix/target/debug/hx"
-
     func startTerm(uuid: UUID) {
         guard let holder = terminalHolder(uuid: uuid) else { return }
 
-        let vars = Terminal.getEnvironmentVariables(termName: "ansi", trueColor: true, additionalVarsToCopy: ["SHELL"])
-        let ipcArgs: [String] = [
-//            "--ipc-input \(ipcManager.inputPipeURL.path)",
-//            "--ipc-output \(ipcManager.outputPipeURL.path)"
+        let helixRoot = Bundle.main.bundleURL.appendingPathComponent("Contents/helix")
+        let helixPath = helixRoot.appendingPathComponent("bin/hx")
+
+        var env = Terminal.getEnvironmentVariables(termName: "ansi", trueColor: true, additionalVarsToCopy: ["SHELL"])
+        env["HELIX_RUNTIME"] = helixRoot.appendingPathComponent("runtime").path
+
+        let additionalArgs: [String] = [
+            "--ipc-input \(ipcManager.inputPipeURL.path)",
+            "--ipc-output \(ipcManager.outputPipeURL.path)"
         ]
-        let cmd = [helixPath] + holder.viewStore.startupArgs.dropFirst() + ipcArgs
+        let cmd = [helixPath.path] + holder.viewStore.startupArgs.dropFirst() + additionalArgs
         let args = ["-l", "-c", cmd.joined(separator: " ")]
         let shell = shell()
 
         print("launching \(shell) \(args)")
 
-        holder.terminal.startProcess(executable: shell, args: args, environment: vars.toVars())
+        holder.terminal.startProcess(executable: shell, args: args, environment: env.toVars())
     }
 
     func openFile(url: URL) {
@@ -151,8 +154,7 @@ extension Terminal {
         let localEnv: [String: String] = [
             "TERM": "\(termName ?? "xterm-256color")",
             "COLORTERM": trueColor ? "truecolor" : "",
-            "LANG": "en_US.UTF-8", // Without this, tools like "vi" produce sequences that are not UTF-8 friendly
-            "HELIX_RUNTIME": "/Users/david/src/helix/runtime" // TODO: how to configure this?
+            "LANG": "en_US.UTF-8" // Without this, tools like "vi" produce sequences that are not UTF-8 friendly
         ]
 
         let varsToCopy = ["LOGNAME", "USER", "DISPLAY", "LC_TYPE", "USER", "HOME"] + additionalVarsToCopy
