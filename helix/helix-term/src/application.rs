@@ -13,7 +13,7 @@ use helix_lsp::{
 use helix_view::{
     align_view,
     document::DocumentSavedEventResult,
-    editor::{ConfigEvent, EditorEvent},
+    editor::{Action, ConfigEvent, EditorEvent},
     graphics::Rect,
     theme,
     tree::Layout,
@@ -40,17 +40,15 @@ use std::{
     path::Path,
     sync::Arc,
 };
-use std::io::Read;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::pin::Pin;
 
 use anyhow::{Context, Error};
 
 use crossterm::{event::Event as CrosstermEvent, tty::IsTty};
-use tokio::io::AsyncBufReadExt;
 #[cfg(not(windows))]
 use {signal_hook::consts::signal, signal_hook_tokio::Signals};
-use helix_view::editor::Action;
 
 #[cfg(windows)]
 type Signals = futures_util::stream::Empty<()>;
@@ -60,6 +58,7 @@ use tui::backend::CrosstermBackend;
 
 #[cfg(feature = "integration")]
 use tui::backend::TestBackend;
+use crate::ipc::write_to_pipe;
 
 #[cfg(not(feature = "integration"))]
 type TerminalBackend = CrosstermBackend<std::io::Stdout>;
@@ -85,6 +84,7 @@ pub struct Application {
     jobs: Jobs,
     lsp_progress: LspProgressMap,
     ipc_stream: Pin<Box<dyn Stream<Item=Result<String, std::io::Error>> + Send>>,
+    pub end_ipc_stream: Box<dyn Fn()>,
 }
 
 #[cfg(feature = "integration")]
@@ -117,8 +117,6 @@ impl Application {
     ) -> Result<Self, Error> {
         #[cfg(feature = "integration")]
         setup_integration_logging();
-
-        use helix_view::editor::Action;
 
         let mut theme_parent_dirs = vec![helix_loader::config_dir()];
         theme_parent_dirs.extend(helix_loader::runtime_dirs().iter().cloned());
@@ -256,11 +254,16 @@ impl Application {
             signals,
             jobs: Jobs::new(),
             lsp_progress: LspProgressMap::new(),
-            ipc_stream: if let Some(ipc_input) = args.ipc_input {
+            ipc_stream: if let Some(ipc_input) = args.ipc_input.clone() {
                 Box::pin(ipc::ipc_stream(ipc_input.clone()))
             } else {
                 Box::pin(stream::empty())
-            }
+            },
+            end_ipc_stream: if let Some(ipc_input) = args.ipc_input.clone() {
+                Box::new(move || { let _ = write_to_pipe(&ipc_input.clone(), "end".to_string()); })
+            } else {
+                Box::new(|| {})
+            },
         };
 
         Ok(app)
@@ -321,6 +324,7 @@ impl Application {
     {
         loop {
             if self.editor.should_close() {
+                self.end_ipc_stream.deref()();
                 return false;
             }
 

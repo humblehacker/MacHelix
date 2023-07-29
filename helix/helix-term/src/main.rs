@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use anyhow::{Context, Error, Result};
 use crossterm::event::EventStream;
 use helix_loader::VERSION_AND_GIT_HASH;

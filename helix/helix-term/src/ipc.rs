@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use futures_util::{Stream, stream};
-use std::fs::File;
-use std::io::{BufReader, Read};
+use std::fs::{File, OpenOptions};
+use std::io::{BufReader, BufWriter, Read, Write};
 
 pub fn ipc_stream(input_pipe_path: PathBuf) -> impl Stream<Item = Result<String, std::io::Error>> {
     let stream = stream::unfold(input_pipe_path, |path| async {
@@ -25,6 +25,15 @@ fn read_from_pipe(path: &PathBuf) -> Result<String, std::io::Error> {
     let mut line = String::new();
     match input_file.read_to_string(&mut line) {
         Ok(_) => Ok(line),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn write_to_pipe(path: &PathBuf, line: String) -> Result<(), std::io::Error> {
+    let output_file = OpenOptions::new().write(true).open(&path)?;
+    let mut output_file = BufWriter::new(output_file);
+    match output_file.write(line.as_bytes()) {
+        Ok(_) => Ok(()),
         Err(e) => Err(e),
     }
 }
