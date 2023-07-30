@@ -254,16 +254,16 @@ impl Application {
             signals,
             jobs: Jobs::new(),
             lsp_progress: LspProgressMap::new(),
-            ipc_stream: if let Some(ipc_input) = args.ipc_input.clone() {
-                Box::pin(ipc::ipc_stream(ipc_input.clone()))
+            ipc_stream: Box::pin(if let Some(ipc_input) = args.ipc_input.clone() {
+                ipc::ipc_stream(ipc_input.clone())
             } else {
-                Box::pin(stream::empty())
-            },
-            end_ipc_stream: if let Some(ipc_input) = args.ipc_input.clone() {
-                Box::new(move || { let _ = write_to_pipe(&ipc_input.clone(), "end".to_string()); })
+                stream::empty()
+            }),
+            end_ipc_stream: Box::new(if let Some(ipc_input) = args.ipc_input.clone() {
+                move || { let _ = write_to_pipe(&ipc_input.clone(), "end".to_string()); }
             } else {
-                Box::new(|| {})
-            },
+                || {}
+            }),
         };
 
         Ok(app)
