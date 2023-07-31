@@ -30,7 +30,6 @@ use crate::{
     job::Jobs,
     keymap::Keymaps,
     ui::{self, overlay::overlaid},
-    ipc,
 };
 
 use log::{debug, error, warn};
@@ -40,13 +39,13 @@ use std::{
     path::Path,
     sync::Arc,
 };
-use std::ops::Deref;
 use std::path::PathBuf;
 use std::pin::Pin;
 
 use anyhow::{Context, Error};
 
 use crossterm::{event::Event as CrosstermEvent, tty::IsTty};
+use futures_util::stream::BoxStream;
 #[cfg(not(windows))]
 use {signal_hook::consts::signal, signal_hook_tokio::Signals};
 
@@ -58,7 +57,6 @@ use tui::backend::CrosstermBackend;
 
 #[cfg(feature = "integration")]
 use tui::backend::TestBackend;
-use crate::ipc::write_to_pipe;
 
 #[cfg(not(feature = "integration"))]
 type TerminalBackend = CrosstermBackend<std::io::Stdout>;
@@ -68,7 +66,9 @@ type TerminalBackend = TestBackend;
 
 type Terminal = tui::terminal::Terminal<TerminalBackend>;
 
-pub struct Application {
+use crate::ipc::{Ipc, IPC};
+
+pub struct Application<'a> {
     compositor: Compositor,
     terminal: Terminal,
     pub editor: Editor,
@@ -83,8 +83,7 @@ pub struct Application {
     signals: Signals,
     jobs: Jobs,
     lsp_progress: LspProgressMap,
-    ipc_stream: Pin<Box<dyn Stream<Item=Result<String, std::io::Error>> + Send>>,
-    pub end_ipc_stream: Box<dyn Fn()>,
+    ipc_stream: BoxStream<'a, Result<String, std::io::Error>>,
 }
 
 #[cfg(feature = "integration")]
@@ -109,7 +108,7 @@ fn setup_integration_logging() {
         .apply();
 }
 
-impl Application {
+impl Application<'_> {
     pub fn new(
         args: Args,
         config: Config,
@@ -241,6 +240,10 @@ impl Application {
         ])
         .context("build signal handler")?;
 
+        unsafe { IPC = Ipc::new(args.ipc_input.clone(), args.ipc_output.clone()); }
+
+        use crate::application::stream::empty;
+
         let app = Self {
             compositor,
             terminal,
@@ -254,16 +257,11 @@ impl Application {
             signals,
             jobs: Jobs::new(),
             lsp_progress: LspProgressMap::new(),
-            ipc_stream: Box::pin(if let Some(ipc_input) = args.ipc_input.clone() {
-                ipc::ipc_stream(ipc_input.clone())
+            ipc_stream: if let Some(ipc) = unsafe { IPC.clone() } {
+                Box::pin(ipc.ipc_stream())
             } else {
-                stream::empty()
-            }),
-            end_ipc_stream: Box::new(if let Some(ipc_input) = args.ipc_input.clone() {
-                move || { let _ = write_to_pipe(&ipc_input.clone(), "end".to_string()); }
-            } else {
-                || {}
-            }),
+                Box::pin(empty())
+            },
         };
 
         Ok(app)
@@ -324,7 +322,9 @@ impl Application {
     {
         loop {
             if self.editor.should_close() {
-                self.end_ipc_stream.deref()();
+                if let Some(ipc) = &mut unsafe { IPC.clone() } {
+                    let _ = ipc.end_ipc_stream().await;
+                }
                 return false;
             }
 
