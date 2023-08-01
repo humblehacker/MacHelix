@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:humblehacker/helix
 	branch = helix-ipc
-	commit = e463c86a32a6b58ad573bd44fa5ed07c44b07548
-	parent = 699ce2691871ef05491e8c259996a0a82b632a08
+	commit = 005bd361bb2693c2495b60e833b2ed82484bc16b
+	parent = 17a5f8428098c2a7c2cdd37d986432abcef3dc02
 	method = rebase
 	cmdver = 0.4.6
