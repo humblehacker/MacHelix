@@ -59,6 +59,7 @@
 /* Begin PBXFileReference section */
 		5AF0E06BEA8C10A537F0A5A3 /* MacHelixUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacHelixUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		5AF0E090082B3ABAE0E2510B /* MacHelixUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacHelixUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5AF0E2C9AB0D4B46BDE411F6 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		5AF0E3FF082D628118D1B989 /* MacHelixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacHelixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AF0EA5E8BCE224C76EC29D9 /* MacHelixUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacHelixUITests.swift; sourceTree = "<group>"; };
 		5AF0ECDF6D5AA187CC7E968D /* MacHelix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacHelix.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1055,6 +1056,7 @@
 				5AF0EEC4AC6F8B33B1F24C8A /* MacHelixUITests */,
 				634C5CDE2A69C245009DB028 /* Frameworks */,
 				63BEEE6F2A74526F00D08009 /* helix */,
+				5AF0E2C9AB0D4B46BDE411F6 /* README.md */,
 			);
 			sourceTree = "<group>";
 		};
