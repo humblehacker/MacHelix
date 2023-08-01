@@ -2,6 +2,7 @@ import AppFeature
 import ComposableArchitecture
 import TerminalFeature
 import SwiftUI
+import SwiftUIIntrospect
 
 @main
 struct HelixApp: App {
@@ -27,8 +28,14 @@ struct HelixApp: App {
                         viewStore.send(.fileDropped(url))
                         return true
                     }
+                    .toolbar { ToolbarItem { Spacer() } } // empty toolbar forces title to left
+                    .introspect(.window, on: .macOS(.v14)) { window in
+                        window.titlebarAppearsTransparent = true
+                    }
             }
         }
+        .windowStyle(.automatic)
+        .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(after: .sidebar) {
                 WithViewStore(store) { viewStore in

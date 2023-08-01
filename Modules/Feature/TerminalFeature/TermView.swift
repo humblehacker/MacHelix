@@ -13,7 +13,10 @@ public struct TermView: NSViewRepresentable {
 
     public func makeNSView(context: Context) -> SwiftTerm.TerminalView {
         let vs = ViewStore(store)
-        return terminalManager.terminal(for: vs.state.uuid, store: store)
+        let view = terminalManager.terminal(for: vs.state.uuid, store: store)
+        // TODO: set color to match helix's background color
+        view.nativeBackgroundColor = NSColor(red: 41/256, green: 42/256, blue: 54/256, alpha: 1.0)
+        return view
     }
 
     public func updateNSView(_ nsView: SwiftTerm.TerminalView, context: Context) {

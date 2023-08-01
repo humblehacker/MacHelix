@@ -29,6 +29,7 @@
 		633D92F02A6A32C900159CE4 /* MacHelixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633D92ED2A6A32C900159CE4 /* MacHelixApp.swift */; };
 		634C5CDD2A69BE7C009DB028 /* Modules in Resources */ = {isa = PBXBuildFile; fileRef = 634C5CDC2A69BE7C009DB028 /* Modules */; };
 		634C5CE02A69C245009DB028 /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 634C5CDF2A69C245009DB028 /* AppFeature */; };
+		63BEF30B2A78C11600D08009 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 63BEF30A2A78C11600D08009 /* SwiftUIIntrospect */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1019,6 +1020,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				634C5CE02A69C245009DB028 /* AppFeature in Frameworks */,
+				63BEF30B2A78C11600D08009 /* SwiftUIIntrospect in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3906,6 +3908,7 @@
 			name = MacHelix;
 			packageProductDependencies = (
 				634C5CDF2A69C245009DB028 /* AppFeature */,
+				63BEF30A2A78C11600D08009 /* SwiftUIIntrospect */,
 			);
 			productName = Helix;
 			productReference = 5AF0ECDF6D5AA187CC7E968D /* MacHelix.app */;
@@ -3951,6 +3954,7 @@
 			);
 			mainGroup = 5AF0E83A957DD1D59C8B9067;
 			packageReferences = (
+				63BEF3092A78C11600D08009 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 			);
 			productRefGroup = 5AF0E7AD5992A157CF5E3040 /* Products */;
 			projectDirPath = "";
@@ -4152,7 +4156,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.4;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -4242,7 +4246,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.4;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -4378,10 +4382,26 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		63BEF3092A78C11600D08009 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		634C5CDF2A69C245009DB028 /* AppFeature */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AppFeature;
+		};
+		63BEF30A2A78C11600D08009 /* SwiftUIIntrospect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 63BEF3092A78C11600D08009 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
+			productName = SwiftUIIntrospect;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

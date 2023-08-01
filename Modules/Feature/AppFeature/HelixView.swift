@@ -21,7 +21,7 @@ public struct HelixView: View {
         WithViewStore(store) { viewStore in
             TermView(store: store.scope(state: \.terminalState, action: HelixFeature.Action.terminal))
                 .padding(4)
-                .background(Color.black)
+                .background(Color(red: 41/256, green: 42/256, blue: 54/256)) // TODO: set color to match helix's background color
         }
     }
 }
