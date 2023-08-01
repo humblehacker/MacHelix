@@ -5,13 +5,13 @@ public struct TerminalFeature: ReducerProtocol {
     @Dependency(\.terminalManager) var terminalManager: TerminalManager
     public init() {}
 
-    public struct State: Equatable {
+    public struct State: Equatable, Sendable {
         public let uuid: UUID = UUID()
 
         public init() {}
     }
 
-    public enum Action: Equatable {
+    public enum Action: Equatable, Sendable {
         case mouseReportingChanged(enabled: Bool)
         case startShell(args: [String], env: [String: String])
     }

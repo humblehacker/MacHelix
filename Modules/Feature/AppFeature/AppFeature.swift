@@ -23,7 +23,7 @@ public struct AppFeature: ReducerProtocol {
         }
     }
 
-    public enum Action: Equatable {
+    public enum Action: Equatable, Sendable {
         case helix(HelixFeature.Action)
         case fileDropped(URL)
         case mouseReportingToggled
@@ -40,12 +40,14 @@ public struct AppFeature: ReducerProtocol {
                 state.mouseReportingEnabled.toggle()
                 return .send(.helix(.terminal(.mouseReportingChanged(enabled: state.mouseReportingEnabled))))
 
+            case .helix(.fileChanged(let url)):
+                state.currentDocumentURL = url
+                return .none
+
             case .helix(_):
                 return .none
 
             case .fileDropped(let url):
-                // TODO: setting currentDocumentURL here is temporary until IPC from hx is implemented
-                state.currentDocumentURL = url
                 return .run { send in
                     await send(.helix(.fileDropped(url)))
                 }

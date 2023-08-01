@@ -16,6 +16,7 @@ use helix_vcs::DiffProviderRegistry;
 use futures_util::stream::select_all::SelectAll;
 use futures_util::{future, StreamExt};
 use helix_lsp::Call;
+use helix_ipc::ipc::IPC;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use std::{
@@ -1264,6 +1265,8 @@ impl Editor {
         doc.mark_as_focused();
 
         align_view(doc, view, Align::Center);
+
+        self.ipc_notify_file_changed(&doc_id);
     }
 
     pub fn switch(&mut self, id: DocumentId, action: Action) {
@@ -1333,6 +1336,7 @@ impl Editor {
                 let doc = doc_mut!(self, &id);
                 doc.ensure_view_init(view_id);
                 doc.mark_as_focused();
+                self.ipc_notify_file_changed(&id);
                 return;
             }
             Action::HorizontalSplit | Action::VerticalSplit => {
@@ -1355,10 +1359,26 @@ impl Editor {
                 let doc = doc_mut!(self, &id);
                 doc.ensure_view_init(view_id);
                 doc.mark_as_focused();
+                self.ipc_notify_file_changed(&id);
             }
         }
 
         self._refresh();
+    }
+
+    pub fn ipc_notify_file_changed(&self, document_id: &DocumentId) {
+        unsafe {
+            if let Some(ipc) = IPC.clone() {
+                if let Some(document) = self.documents.get(&document_id) {
+                    if let Some(path) = document.path() {
+                        let path = path.to_str().unwrap().to_string();
+                        tokio::spawn(async move {
+                            let _ = ipc.send_output_event(format!("fileChanged: {}", path)).await;
+                        });
+                    }
+                }
+            }
+        }
     }
 
     /// Generate an id for a new document and register it.
@@ -1445,6 +1465,11 @@ impl Editor {
         }
         self.tree.remove(id);
         self._refresh();
+
+        let view_id = self.tree.focus;
+        let view = self.tree.get_mut(view_id);
+        let doc_id = self.documents[&view.doc].id;
+        self.ipc_notify_file_changed(&doc_id);
     }
 
     pub fn close_document(&mut self, doc_id: DocumentId, force: bool) -> Result<(), CloseError> {
@@ -1517,6 +1542,7 @@ impl Editor {
             let doc = doc_mut!(self, &doc_id);
             doc.ensure_view_init(view_id);
             doc.mark_as_focused();
+            self.ipc_notify_file_changed(&doc_id);
         }
 
         self._refresh();
@@ -1586,6 +1612,8 @@ impl Editor {
         let view = view!(self, view_id);
         let doc = doc_mut!(self, &view.doc);
         doc.mark_as_focused();
+        let id = doc.id();
+        self.ipc_notify_file_changed(&id);
     }
 
     pub fn focus_next(&mut self) {

@@ -1257,6 +1257,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-ipc"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "tokio",
+]
+
+[[package]]
 name = "helix-loader"
 version = "0.6.0"
 dependencies = [
@@ -1317,6 +1325,7 @@ dependencies = [
  "grep-searcher",
  "helix-core",
  "helix-dap",
+ "helix-ipc",
  "helix-loader",
  "helix-lsp",
  "helix-tui",
@@ -1384,6 +1393,7 @@ dependencies = [
  "futures-util",
  "helix-core",
  "helix-dap",
+ "helix-ipc",
  "helix-loader",
  "helix-lsp",
  "helix-tui",

@@ -40,7 +40,6 @@ use std::{
     sync::Arc,
 };
 use std::path::PathBuf;
-use std::pin::Pin;
 
 use anyhow::{Context, Error};
 
@@ -48,6 +47,8 @@ use crossterm::{event::Event as CrosstermEvent, tty::IsTty};
 use futures_util::stream::BoxStream;
 #[cfg(not(windows))]
 use {signal_hook::consts::signal, signal_hook_tokio::Signals};
+use helix_ipc::ipc::{IPC, Ipc};
+
 
 #[cfg(windows)]
 type Signals = futures_util::stream::Empty<()>;
@@ -65,8 +66,6 @@ type TerminalBackend = CrosstermBackend<std::io::Stdout>;
 type TerminalBackend = TestBackend;
 
 type Terminal = tui::terminal::Terminal<TerminalBackend>;
-
-use crate::ipc::{Ipc, IPC};
 
 pub struct Application<'a> {
     compositor: Compositor,
