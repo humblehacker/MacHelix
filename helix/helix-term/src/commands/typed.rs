@@ -2957,31 +2957,7 @@ pub(super) fn command_mode(cx: &mut Context) {
             }
         }, // completion
         move |cx: &mut compositor::Context, input: &str, event: PromptEvent| {
-            let parts = input.split_whitespace().collect::<Vec<&str>>();
-            if parts.is_empty() {
-                return;
-            }
-
-            // If command is numeric, interpret as line number and go there.
-            if parts.len() == 1 && parts[0].parse::<usize>().ok().is_some() {
-                if let Err(e) = typed::goto_line_number(cx, &[Cow::from(parts[0])], event) {
-                    cx.editor.set_error(format!("{}", e));
-                }
-                return;
-            }
-
-            // Handle typable commands
-            if let Some(cmd) = typed::TYPABLE_COMMAND_MAP.get(parts[0]) {
-                let shellwords = Shellwords::from(input);
-                let args = shellwords.words();
-
-                if let Err(e) = (cmd.fun)(cx, &args[1..], event) {
-                    cx.editor.set_error(format!("{}", e));
-                }
-            } else if event == PromptEvent::Validate {
-                cx.editor
-                    .set_error(format!("no such command: '{}'", parts[0]));
-            }
+            execute_typed_command(cx, input, event);
         },
     );
     prompt.doc_fn = Box::new(|input: &str| {
@@ -3002,6 +2978,34 @@ pub(super) fn command_mode(cx: &mut Context) {
     // Calculate initial completion
     prompt.recalculate_completion(cx.editor);
     cx.push_layer(Box::new(prompt));
+}
+
+pub fn execute_typed_command(cx: &mut compositor::Context, input: &str, event: PromptEvent) {
+    let parts = input.split_whitespace().collect::<Vec<&str>>();
+    if parts.is_empty() {
+        return;
+    }
+
+    // If command is numeric, interpret as line number and go there.
+    if parts.len() == 1 && parts[0].parse::<usize>().ok().is_some() {
+        if let Err(e) = typed::goto_line_number(cx, &[Cow::from(parts[0])], event) {
+            cx.editor.set_error(format!("{}", e));
+        }
+        return;
+    }
+
+    // Handle typable commands
+    if let Some(cmd) = typed::TYPABLE_COMMAND_MAP.get(parts[0]) {
+        let shellwords = Shellwords::from(input);
+        let args = shellwords.words();
+
+        if let Err(e) = (cmd.fun)(cx, &args[1..], event) {
+            cx.editor.set_error(format!("{}", e));
+        }
+    } else if event == PromptEvent::Validate {
+        cx.editor
+            .set_error(format!("no such command: '{}'", parts[0]));
+    }
 }
 
 fn argument_number_of(shellwords: &Shellwords) -> usize {
