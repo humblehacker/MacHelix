@@ -31,6 +31,9 @@ public struct HelixFeature: ReducerProtocol, Sendable {
         case start(args: [String])
         case fileDropped(_ url: URL)
         case fileChanged(_ url: URL)
+        case cutMenuSelected
+        case copyMenuSelected
+        case pasteMenuSelected
     }
 
     public var body: some ReducerProtocol<State, Action> {
@@ -47,7 +50,8 @@ public struct HelixFeature: ReducerProtocol, Sendable {
 
                 let additionalArgs: [String] = [
                     "--ipc-input \(inputPipeURL.path)",
-                    "--ipc-output \(outputPipeURL.path)"
+                    "--ipc-output \(outputPipeURL.path)",
+                    "-vvv"
                 ]
                 let cmd = [helixPath.path] + startupArgs.dropFirst() + additionalArgs
                 let shellArgs = ["-l", "-c", cmd.joined(separator: " ")]
@@ -76,9 +80,16 @@ public struct HelixFeature: ReducerProtocol, Sendable {
                 return .none
 
             case .fileDropped(let url):
-                return .run { send in await
-                    ipcManager.sendMessage("openFile:\(url.path)")
-                }
+                return .run { send in await ipcManager.sendMessage(":open \(url.path)") }
+
+            case .cutMenuSelected:
+                return .run { send in await ipcManager.sendMessage("cut") }
+
+            case .copyMenuSelected:
+                return .run { send in await ipcManager.sendMessage(":clipboard-yank") }
+
+            case .pasteMenuSelected:
+                return .run { send in await ipcManager.sendMessage(":clipboard-paste-before") }
             }
         }
     }

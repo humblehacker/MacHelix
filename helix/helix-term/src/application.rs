@@ -24,7 +24,7 @@ use tui::backend::Backend;
 
 use crate::{
     args::Args,
-    commands::apply_workspace_edit,
+    commands::{apply_workspace_edit, execute_typed_command},
     compositor::{Compositor, Event},
     config::Config,
     job::Jobs,
@@ -39,7 +39,6 @@ use std::{
     path::Path,
     sync::Arc,
 };
-use std::path::PathBuf;
 
 use anyhow::{Context, Error};
 
@@ -58,6 +57,7 @@ use tui::backend::CrosstermBackend;
 
 #[cfg(feature = "integration")]
 use tui::backend::TestBackend;
+use crate::ui::PromptEvent;
 
 #[cfg(not(feature = "integration"))]
 type TerminalBackend = CrosstermBackend<std::io::Stdout>;
@@ -489,30 +489,32 @@ impl Application<'_> {
 
         let parts: Vec<&str> = message.split(":").collect();
         let command = parts[0];
-        let rest = &parts[1..];
+        let rest = if parts.len() > 1 { &parts[1..] } else { &[] };
 
         self.handle_ipc_command(command, rest)
     }
 
     fn handle_ipc_command(&mut self, command: &str, rest: &[&str]) -> bool {
+        debug!("handle_ipc_command {}", command);
         match command {
-            "openFile" => {
-                let path = PathBuf::from(rest[0]);
-                match self.editor.open(&path, Action::Replace) {
-                    Ok(_) => {}
-                    Err(e) => {
-                        self.editor.set_error(format!(
-                            "Failed to open file '{}': {}",
-                            path.display(),
-                            e
-                        ));
-                    }
-                }
+            "" => {
+                self.execute_typed_command(&*rest.join(" "))
             }
             "exit" => return false,
             _ => self.editor.set_error(format!("unknown command {}", command)),
         }
         true
+    }
+
+    fn execute_typed_command(&mut self, input: &str) {
+        debug!("execute_typed_command {}", input);
+        let mut cx = crate::compositor::Context {
+            editor: &mut self.editor,
+            jobs: &mut self.jobs,
+            scroll: None,
+        };
+
+        execute_typed_command(&mut cx, input, PromptEvent::Validate);
     }
 
     #[cfg(windows)]
