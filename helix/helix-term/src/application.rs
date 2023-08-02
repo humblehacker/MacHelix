@@ -236,7 +236,7 @@ impl Application<'_> {
         ])
         .context("build signal handler")?;
 
-        unsafe { IPC = Ipc::new(args.ipc_input.clone(), args.ipc_output.clone()); }
+        unsafe { IPC = Ipc::new(&args.ipc_input, &args.ipc_output); }
 
         use crate::application::stream::empty;
 
