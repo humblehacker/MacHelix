@@ -1482,9 +1482,10 @@ impl Editor {
         self._refresh();
 
         let view_id = self.tree.focus;
-        let view = self.tree.get_mut(view_id);
-        let doc_id = self.documents[&view.doc].id;
-        self.ipc_notify_file_changed(&doc_id);
+        if let Some(view) = self.tree.try_get(view_id) {
+            let doc_id = self.documents[&view.doc].id;
+            self.ipc_notify_file_changed(&doc_id);
+        }
     }
 
     pub fn close_document(&mut self, doc_id: DocumentId, force: bool) -> Result<(), CloseError> {

@@ -14,14 +14,14 @@ pub struct Ipc {
 
 impl Ipc {
 
-    pub fn new(input_pipe_path: Option<PathBuf>, output_pipe_path: Option<PathBuf>) -> Option<Self> {
+    pub fn new(input_pipe_path: &Option<PathBuf>, output_pipe_path: &Option<PathBuf>) -> Option<Self> {
         let input_pipe_path = match input_pipe_path {
-            Some(path) => path,
+            Some(path) => path.clone(),
             None => return None,
         };
 
         let output_pipe_path = match output_pipe_path {
-            Some(path) => path,
+            Some(path) => path.clone(),
             None => return None,
         };
 
