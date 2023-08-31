@@ -6,8 +6,8 @@ import SwiftUIIntrospect
 
 @main
 struct HelixApp: App {
-    let store: StoreOf<AppFeature> = Store(initialState: AppFeature.State(), reducer: AppFeature())
-    @ObservedObject var viewStore: ViewStore<AppFeature.State, AppFeature.Action>
+    let store = Store(initialState: AppFeature.State()) { AppFeature() }
+    @ObservedObject var viewStore: ViewStoreOf<AppFeature>
     var args: [String] = CommandLine.arguments
 
     init() {
@@ -15,7 +15,7 @@ struct HelixApp: App {
             args.remove(atOffsets: IndexSet([1, 2]))
         }
         print(args)
-        self.viewStore = ViewStore(self.store)
+        self.viewStore = ViewStore(self.store, observe: { $0 })
     }
 
     var body: some Scene {

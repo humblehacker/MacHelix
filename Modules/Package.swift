@@ -49,7 +49,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/pointfreeco/swift-composable-architecture",
-            from: "0.47.0"),
+            from: "1.2.0"),
         .package(
             url: "https://github.com/migueldeicaza/SwiftTerm",
             from: "1.0.0"),

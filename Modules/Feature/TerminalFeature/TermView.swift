@@ -27,9 +27,9 @@ struct TermView_Previews: PreviewProvider {
     static var previews: some View {
         TermView(
             store: Store(
-                initialState: TerminalFeature.State(),
-                reducer: TerminalFeature()
-            )
+                initialState: TerminalFeature.State()) {
+                    TerminalFeature()
+                }
         )
     }
 }

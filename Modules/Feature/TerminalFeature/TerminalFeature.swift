@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import Foundation
 
-public struct TerminalFeature: ReducerProtocol {
+public struct TerminalFeature: Reducer {
     @Dependency(\.terminalManager) var terminalManager: TerminalManager
     public init() {}
 
@@ -16,7 +16,7 @@ public struct TerminalFeature: ReducerProtocol {
         case startShell(args: [String], env: [String: String])
     }
 
-    public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .mouseReportingChanged(let enabled):
             return .run { [uuid = state.uuid] send in

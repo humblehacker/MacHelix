@@ -10,7 +10,7 @@ public enum Position {
     case bottom
 }
 
-public struct AppFeature: ReducerProtocol {
+public struct AppFeature: Reducer {
 
     public init() {}
 
@@ -29,7 +29,7 @@ public struct AppFeature: ReducerProtocol {
         case mouseReportingToggled
     }
 
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.helixState, action: /Action.helix) { HelixFeature() }
             ._printChanges()
 

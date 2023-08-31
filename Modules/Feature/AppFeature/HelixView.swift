@@ -18,7 +18,7 @@ public struct HelixView: View {
     }
 
     public var body: some View {
-        WithViewStore(store) { viewStore in
+        WithViewStore(store, observe: { $0 }) { viewStore in
             TermView(store: store.scope(state: \.terminalState, action: HelixFeature.Action.terminal))
                 .padding(4)
                 .background(Color(red: 41/256, green: 42/256, blue: 54/256)) // TODO: set color to match helix's background color
@@ -30,10 +30,9 @@ public struct HelixView: View {
      static var previews: some View {
          NavigationStack {
              HelixView(
-                store: Store(
-                    initialState: HelixFeature.State(),
-                    reducer: HelixFeature()
-                )
+                store: Store(initialState: HelixFeature.State()) {
+                    HelixFeature()
+                }
              )
          }
          .previewLayout(.sizeThatFits)

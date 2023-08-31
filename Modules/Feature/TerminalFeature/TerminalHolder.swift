@@ -23,6 +23,6 @@ public class TerminalHolder {
 
 extension TerminalHolder {
     var viewStore: ViewStoreOf<TerminalFeature> {
-        ViewStore(store)
+        ViewStore(store, observe: { $0 })
     }
 }

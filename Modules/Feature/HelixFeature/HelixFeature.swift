@@ -2,7 +2,7 @@ import ComposableArchitecture
 import Foundation
 import TerminalFeature
 
-public struct HelixFeature: ReducerProtocol, Sendable {
+public struct HelixFeature: Reducer, Sendable {
     @Dependency(\.ipcManager) var ipcManager
     public var terminalState: TerminalFeature.State
     private static let pipePathPrefix: String = "\(Bundle.main.bundleIdentifier!).\(ProcessInfo.processInfo.processIdentifier)"
@@ -36,7 +36,7 @@ public struct HelixFeature: ReducerProtocol, Sendable {
         case pasteMenuSelected
     }
 
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.terminalState, action: /Action.terminal) { TerminalFeature() }
 
         Reduce { state, action in
