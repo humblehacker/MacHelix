@@ -4014,7 +4014,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export PATH=${PATH}:/opt/homebrew/bin\ncd helix\ncargo install --path helix-term --locked --root ./build\n";
+			shellScript = "export PATH=${PATH}:~/.cargo/bin\ncd helix\ncargo install --debug --path helix-term --locked --root ./build\n";
 		};
 		63BEF3082A7458F100D08009 /* Copy helix to Application Bundle */ = {
 			isa = PBXShellScriptBuildPhase;
