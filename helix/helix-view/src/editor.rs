@@ -1846,21 +1846,22 @@ impl Editor {
             if let Some(ipc) = IPC.clone() {
                 if let Some(bgStyle) = self.theme.try_get("ui.background") {
                     if let Some(bgColor) = bgStyle.bg {
-                        match bgColor {
-                            Color::Rgb(r, g, b) => {
-                                let rgb_string = format!("#{:02X}{:02X}{:02X}", r, g, b);
-                                tokio::spawn(async move {
-                                    let _ = ipc.send_output_event(format!("themeChanged: {}", rgb_string)).await;
-                                });
-                            }
-                            _ => {}
-                        }
+                        let hexColor = Self::color_to_hex_string(bgColor);
+                        tokio::spawn(async move {
+                            let _ = ipc.send_output_event(format!("themeChanged: {}", hexColor)).await;
+                        });
                     }
                 }
             }
         }
     }
 
+    fn color_to_hex_string(color: Color) -> String {
+        match color {
+            Color::Rgb(r, g, b) => format!("#{:02X}{:02X}{:02X}", r, g, b),
+            _ => String::new(),
+        }
+    }
 }
 
 fn try_restore_indent(doc: &mut Document, view: &mut View) {
