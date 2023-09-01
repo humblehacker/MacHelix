@@ -63,14 +63,14 @@ actor IPCManager {
     func sendMessage(_ message: String) {
         guard let inputPipeURL else { return }
 
-        Task {
-            let fileHandle = try! FileHandle(forWritingTo: inputPipeURL)
-            defer { try! fileHandle.close() }
+        print("sending message \(message)")
 
-            let secData = message.data(using: .utf8)
-            if let secData = secData {
-                try! fileHandle.write(contentsOf: secData)
-            }
+        let fileHandle = try! FileHandle(forWritingTo: inputPipeURL)
+        defer { try! fileHandle.close() }
+
+        let secData = message.data(using: .utf8)
+        if let secData = secData {
+            try! fileHandle.write(contentsOf: secData)
         }
     }
 

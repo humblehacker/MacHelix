@@ -22,7 +22,7 @@ public struct HelixView: View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             TermView(store: store.scope(state: \.terminalState, action: HelixFeature.Action.terminal))
                 .padding(4)
-                .background(viewStore.backgroundColor?.toSwiftUI() ?? SwiftUI.Color.blue)
+                .background(viewStore.backgroundColor?.toSwiftUI() ?? SwiftUI.Color.black)
         }
     }
 }

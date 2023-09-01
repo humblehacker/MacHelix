@@ -63,9 +63,11 @@ public struct HelixFeature: Reducer, Sendable {
 
                 let env = ["HELIX_RUNTIME": helixRoot.appendingPathComponent("runtime").path]
 
+
                 return .run { [ipcManager] send in
                     await send(.terminal(.startShell(args: shellArgs, env: env)))
                     await ipcManager.start(inputPipeURL: inputPipeURL, outputPipeURL: outputPipeURL)
+                    Task { await ipcManager.sendMessage("force_theme_update:") }
 
                     for await message in await ipcManager.serverMessages {
                         print(message)
@@ -74,10 +76,12 @@ public struct HelixFeature: Reducer, Sendable {
                         switch command {
                         case "fileChanged":
                             await send(.fileChanged(URL(fileURLWithPath: rest.first!)))
+
                         case "themeChanged":
                             // rest should contain #RGB value
                             let rgb = Color(hexColorString: rest.first!)
                             await send(.themeChanged(bgColor: rgb))
+
                         default:
                             print("unknown command \(message)")
                         }

@@ -497,6 +497,9 @@ impl Application<'_> {
             "" => {
                 self.execute_typed_command(&*rest.join(" "))
             }
+            "force_theme_update" => {
+                self.editor.ipc_notify_theme_changed();
+            }
             "exit" => return false,
             _ => self.editor.set_error(format!("unknown command {}", command)),
         }

@@ -1164,6 +1164,7 @@ impl Editor {
                 let last_theme = std::mem::replace(&mut self.theme, theme);
                 // only insert on first preview: this will be the last theme the user has saved
                 self.last_theme.get_or_insert(last_theme);
+                self.ipc_notify_theme_changed();
             }
             ThemeAction::Set => {
                 self.last_theme = None;
@@ -1844,16 +1845,22 @@ impl Editor {
     pub fn ipc_notify_theme_changed(&self) {
         unsafe {
             if let Some(ipc) = IPC.clone() {
-                if let Some(bgStyle) = self.theme.try_get("ui.background") {
-                    if let Some(bgColor) = bgStyle.bg {
-                        let hexColor = Self::color_to_hex_string(bgColor);
-                        tokio::spawn(async move {
-                            let _ = ipc.send_output_event(format!("themeChanged: {}", hexColor)).await;
-                        });
-                    }
+                if let Some(hex_color) = self.get_background_color() {
+                    tokio::spawn(async move {
+                        let _ = ipc.send_output_event(format!("themeChanged: {}", hex_color)).await;
+                    });
                 }
             }
         }
+    }
+
+    pub fn get_background_color(&self) -> Option<String> {
+        if let Some(bg_style) = self.theme.try_get("ui.background") {
+            if let Some(bg_color) = bg_style.bg {
+                return Some(Self::color_to_hex_string(bg_color));
+            }
+        }
+        None
     }
 
     fn color_to_hex_string(color: Color) -> String {
