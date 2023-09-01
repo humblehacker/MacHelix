@@ -867,6 +867,7 @@ pub struct Breakpoint {
 }
 
 use futures_util::stream::{Flatten, Once};
+use crate::graphics::Color;
 
 pub struct Editor {
     /// Current editing mode.
@@ -1167,6 +1168,7 @@ impl Editor {
             ThemeAction::Set => {
                 self.last_theme = None;
                 self.theme = theme;
+                self.ipc_notify_theme_changed();
             }
         }
 
@@ -1379,21 +1381,6 @@ impl Editor {
         }
 
         self._refresh();
-    }
-
-    pub fn ipc_notify_file_changed(&self, document_id: &DocumentId) {
-        unsafe {
-            if let Some(ipc) = IPC.clone() {
-                if let Some(document) = self.documents.get(&document_id) {
-                    if let Some(path) = document.path() {
-                        let path = path.to_str().unwrap().to_string();
-                        tokio::spawn(async move {
-                            let _ = ipc.send_output_event(format!("fileChanged: {}", path)).await;
-                        });
-                    }
-                }
-            }
-        }
     }
 
     /// Generate an id for a new document and register it.
@@ -1838,6 +1825,42 @@ impl Editor {
             .as_ref()
             .and_then(|debugger| debugger.current_stack_frame())
     }
+
+    pub fn ipc_notify_file_changed(&self, document_id: &DocumentId) {
+        unsafe {
+            if let Some(ipc) = IPC.clone() {
+                if let Some(document) = self.documents.get(&document_id) {
+                    if let Some(path) = document.path() {
+                        let path = path.to_str().unwrap().to_string();
+                        tokio::spawn(async move {
+                            let _ = ipc.send_output_event(format!("fileChanged: {}", path)).await;
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn ipc_notify_theme_changed(&self) {
+        unsafe {
+            if let Some(ipc) = IPC.clone() {
+                if let Some(bgStyle) = self.theme.try_get("ui.background") {
+                    if let Some(bgColor) = bgStyle.bg {
+                        match bgColor {
+                            Color::Rgb(r, g, b) => {
+                                let rgb_string = format!("#{:02X}{:02X}{:02X}", r, g, b);
+                                tokio::spawn(async move {
+                                    let _ = ipc.send_output_event(format!("themeChanged: {}", rgb_string)).await;
+                                });
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 fn try_restore_indent(doc: &mut Document, view: &mut View) {

@@ -13,28 +13,34 @@ extension Target.Dependency {
         package: "SwiftTerm"
     )
 
+    static let Common: Self = "Common"
     static let AppFeature: Self = "AppFeature"
     static let TerminalFeature: Self = "TerminalFeature"
     static let HelixFeature: Self = "HelixFeature"
 }
 
 extension Target {
+    static let Common = Target.target(
+        name: "Common",
+        path: "Common"
+    )
+
     static let AppFeature = Target.target(
         "AppFeature",
         group: "Feature",
-        dependencies: [ .HelixFeature, .TerminalFeature ]
+        dependencies: [ .Common, .HelixFeature, .TerminalFeature ]
     )
 
     static let TerminalFeature = Target.target(
         "TerminalFeature",
         group: "Feature",
-        dependencies: [ .TCA, .SwiftTerm ]
+        dependencies: [ .Common, .SwiftTerm, .TCA ]
     )
 
     static let HelixFeature = Target.target(
         "HelixFeature",
         group: "Feature",
-        dependencies: [ .TCA, .TerminalFeature ]
+        dependencies: [ .Common, .TCA, .TerminalFeature ]
     )
 }
 
@@ -44,17 +50,19 @@ let package = Package(
     products: [
         .library(name: Target.AppFeature.name, targets: [ .AppFeature ]),
         .library(name: Target.HelixFeature.name, targets: [ .HelixFeature ]),
-        .library(name: Target.TerminalFeature.name, targets: [ .TerminalFeature ])
+        .library(name: Target.TerminalFeature.name, targets: [ .TerminalFeature ]),
+        .library(name: Target.Common.name, targets: [ .Common ])
     ],
     dependencies: [
         .package(
             url: "https://github.com/pointfreeco/swift-composable-architecture",
             from: "1.2.0"),
         .package(
-            url: "https://github.com/migueldeicaza/SwiftTerm",
-            from: "1.0.0"),
+            url: "https://github.com/humblehacker/SwiftTerm",
+            branch: "fix-sgr-mouse"),
     ],
     targets: [
+        .Common,
         .AppFeature,
         .HelixFeature,
         .TerminalFeature

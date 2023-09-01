@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Common
 import Foundation
 import TerminalFeature
 
@@ -16,13 +17,16 @@ public struct HelixFeature: Reducer, Sendable {
     public struct State: Equatable, Sendable {
         public var terminalState: TerminalFeature.State
         public var currentFileURL: URL?
+        public var backgroundColor: Color?
 
         public init(
             terminalState: TerminalFeature.State = TerminalFeature.State(),
-            currentFileURL: URL? = nil
+            currentFileURL: URL? = nil,
+            backgroundColor: Color? = nil
         ) {
             self.terminalState = terminalState
             self.currentFileURL = currentFileURL
+            self.backgroundColor = backgroundColor
         }
     }
 
@@ -31,6 +35,7 @@ public struct HelixFeature: Reducer, Sendable {
         case start(args: [String])
         case fileDropped(_ url: URL)
         case fileChanged(_ url: URL)
+        case themeChanged(bgColor: Color)
         case cutMenuSelected
         case copyMenuSelected
         case pasteMenuSelected
@@ -69,6 +74,10 @@ public struct HelixFeature: Reducer, Sendable {
                         switch command {
                         case "fileChanged":
                             await send(.fileChanged(URL(fileURLWithPath: rest.first!)))
+                        case "themeChanged":
+                            // rest should contain #RGB value
+                            let rgb = Color(hexColorString: rest.joined().trimmingCharacters(in: .whitespacesAndNewlines))
+                            await send(.themeChanged(bgColor: rgb))
                         default:
                             print("unknown command \(message)")
                         }
@@ -78,6 +87,10 @@ public struct HelixFeature: Reducer, Sendable {
             case .fileChanged(let url):
                 state.currentFileURL = url
                 return .none
+
+            case .themeChanged(bgColor: let bgColor):
+                state.backgroundColor = bgColor
+                return .send(.terminal(.backgroundColorChanged(bgColor)))
 
             case .fileDropped(let url):
                 return .run { send in await ipcManager.sendMessage(":open \(url.path)") }

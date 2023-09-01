@@ -1,5 +1,6 @@
 import Combine
 import ComposableArchitecture
+import Common
 import SwiftTerm
 import SwiftUI
 
@@ -12,14 +13,37 @@ public struct TermView: NSViewRepresentable {
     }
 
     public func makeNSView(context: Context) -> SwiftTerm.TerminalView {
-        let vs = ViewStore(store)
+        let vs = context.coordinator.viewStore
         let view = terminalManager.terminal(for: vs.state.uuid, store: store)
-        // TODO: set color to match helix's background color
-        view.nativeBackgroundColor = NSColor(red: 41/256, green: 42/256, blue: 54/256, alpha: 1.0)
+        if let color = vs.backgroundColor {
+            view.nativeBackgroundColor = color.toNSColor()
+        }
         return view
     }
 
     public func updateNSView(_ nsView: SwiftTerm.TerminalView, context: Context) {
+        let vs = context.coordinator.viewStore
+        if let color = vs.backgroundColor {
+            nsView.nativeBackgroundColor = color.toNSColor()
+        }
+    }
+
+    public func makeCoordinator() -> Coordinator {
+        Coordinator(viewStore: ViewStore(store, observe: { $0 }))
+    }
+
+    public class Coordinator {
+        var viewStore: ViewStoreOf<TerminalFeature>
+
+        init(viewStore: ViewStoreOf<TerminalFeature>) {
+            self.viewStore = viewStore
+        }
+    }
+}
+
+extension Common.Color {
+    func toNSColor() -> NSColor {
+        NSColor(red: Double(red)/256, green: Double(green)/256, blue: Double(blue)/256, alpha: 1.0)
     }
 }
 
@@ -30,6 +54,6 @@ struct TermView_Previews: PreviewProvider {
                 initialState: TerminalFeature.State()) {
                     TerminalFeature()
                 }
-        )
+            )
     }
 }

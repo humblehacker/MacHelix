@@ -6,9 +6,10 @@
 //
 
 import ComposableArchitecture
+import Common
+import HelixFeature
 import SwiftUI
 import TerminalFeature
-import HelixFeature
 
 public struct HelixView: View {
     let store: StoreOf<HelixFeature>
@@ -21,7 +22,7 @@ public struct HelixView: View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             TermView(store: store.scope(state: \.terminalState, action: HelixFeature.Action.terminal))
                 .padding(4)
-                .background(Color(red: 41/256, green: 42/256, blue: 54/256)) // TODO: set color to match helix's background color
+                .background(viewStore.backgroundColor?.toSwiftUI() ?? SwiftUI.Color.blue)
         }
     }
 }
@@ -38,3 +39,9 @@ public struct HelixView: View {
          .previewLayout(.sizeThatFits)
      }
  }
+
+extension Common.Color {
+    func toSwiftUI() -> SwiftUI.Color {
+        SwiftUI.Color(red: Double(red)/256, green: Double(green)/256, blue: Double(blue)/256)
+    }
+}

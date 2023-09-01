@@ -481,7 +481,7 @@ impl Application<'_> {
     }
 
     async fn handle_ipc_message(&mut self, message: String) -> bool {
-        self.editor.set_status(format!("ipc message: {}", message));
+        self.editor.set_status(format!("IPC> {}", message));
         if message.is_empty() { return true; }
 
         let parts: Vec<&str> = message.split(":").collect();
