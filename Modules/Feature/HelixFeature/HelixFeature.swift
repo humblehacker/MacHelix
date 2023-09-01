@@ -69,14 +69,14 @@ public struct HelixFeature: Reducer, Sendable {
 
                     for await message in await ipcManager.serverMessages {
                         print(message)
-                        let parts = message.components(separatedBy: ":")
-                        let (command, rest) = (parts.first, parts.dropFirst())
+                        let (command, rest) = parseMessage(message)
+
                         switch command {
                         case "fileChanged":
                             await send(.fileChanged(URL(fileURLWithPath: rest.first!)))
                         case "themeChanged":
                             // rest should contain #RGB value
-                            let rgb = Color(hexColorString: rest.joined().trimmingCharacters(in: .whitespacesAndNewlines))
+                            let rgb = Color(hexColorString: rest.first!)
                             await send(.themeChanged(bgColor: rgb))
                         default:
                             print("unknown command \(message)")
@@ -105,5 +105,18 @@ public struct HelixFeature: Reducer, Sendable {
                 return .run { send in await ipcManager.sendMessage(":clipboard-paste-before") }
             }
         }
+    }
+
+
+    func parseMessage(_ message: String) -> (String, [String]) {
+        let parts = message.split(separator: ":", maxSplits: 1)
+        let command = String(parts.first!)
+        let rest = parts
+            .dropFirst()
+            .joined()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .components(separatedBy: ",")
+
+        return (command, rest)
     }
 }
