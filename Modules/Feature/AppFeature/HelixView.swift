@@ -42,6 +42,6 @@ public struct HelixView: View {
 
 extension Common.Color {
     func toSwiftUI() -> SwiftUI.Color {
-        SwiftUI.Color(red: Double(red)/256, green: Double(green)/256, blue: Double(blue)/256)
+        Color(red: Double(red)/256, green: Double(green)/256, blue: Double(blue)/256)
     }
 }

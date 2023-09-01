@@ -1,7 +1,8 @@
 import ComposableArchitecture
+import Common
 import Foundation
-import TerminalFeature
 import HelixFeature
+import TerminalFeature
 
 public enum Position {
     case left
@@ -18,6 +19,8 @@ public struct AppFeature: Reducer {
         public var mouseReportingEnabled: Bool = true
         public var currentDocumentURL: URL?
         public var helixState: HelixFeature.State
+        public var isDarkMode: Bool = true
+
         public init(helixState: HelixFeature.State = HelixFeature.State()) {
             self.helixState = helixState
         }
@@ -42,6 +45,10 @@ public struct AppFeature: Reducer {
 
             case .helix(.fileChanged(let url)):
                 state.currentDocumentURL = url
+                return .none
+
+            case .helix(.themeChanged(bgColor: let bgColor)):
+                state.isDarkMode = bgColor.isDark()
                 return .none
 
             case .helix(_):

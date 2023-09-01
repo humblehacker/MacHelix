@@ -32,7 +32,7 @@ struct HelixApp: App {
                 .toolbar { ToolbarItem { Spacer() } } // empty toolbar forces title to left
                 .introspect(.window, on: .macOS(.v14)) { window in
                     window.titlebarAppearsTransparent = true
-                    NSApp.appearance = NSAppearance(named: .darkAqua)
+                    NSApp.appearance = NSAppearance(named: viewStore.isDarkMode ? .darkAqua : .aqua)
                 }
         }
         .windowStyle(.automatic)

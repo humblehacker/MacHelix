@@ -114,8 +114,8 @@ public struct HelixFeature: Reducer, Sendable {
         let rest = parts
             .dropFirst()
             .joined()
-            .trimmingCharacters(in: .whitespacesAndNewlines)
             .components(separatedBy: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
         return (command, rest)
     }
