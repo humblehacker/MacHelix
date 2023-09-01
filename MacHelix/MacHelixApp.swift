@@ -11,9 +11,11 @@ struct HelixApp: App {
     var args: [String] = CommandLine.arguments
 
     init() {
+        #if DEBUG
         if args[1] == "-NSDocumentRevisionsDebugMode" {
             args.remove(atOffsets: IndexSet([1, 2]))
         }
+        #endif
         print(args)
         self.viewStore = ViewStore(self.store, observe: { $0 })
     }
