@@ -54,6 +54,7 @@ use tui::backend::CrosstermBackend;
 
 #[cfg(feature = "integration")]
 use tui::backend::TestBackend;
+use crate::keymap::KeyTrie::MappableCommand;
 use crate::ui::PromptEvent;
 
 #[cfg(not(feature = "integration"))]
@@ -497,6 +498,9 @@ impl Application<'_> {
             "" => {
                 self.execute_typed_command(&*rest.join(" "))
             }
+            "static_command" => {
+                self.execute_static_command(&*rest.join(" "))
+            }
             "force_theme_update" => {
                 self.editor.ipc_notify_theme_changed();
             }
@@ -515,6 +519,26 @@ impl Application<'_> {
         };
 
         execute_typed_command(&mut cx, input, PromptEvent::Validate);
+    }
+
+    fn execute_static_command(&mut self, input: &str) {
+        debug!("execute_static_command {}", input);
+        let mut cx = crate::commands::Context {
+            editor: &mut self.editor,
+            count: None,
+            register: None,
+            callback: None,
+            on_next_key_callback: None,
+            jobs: &mut self.jobs,
+        };
+
+        use std::str::FromStr;
+        use crate::commands::MappableCommand;
+        let result = MappableCommand::from_str(&input);
+        match result {
+            Ok(cmd) => { cmd.execute(&mut cx); }
+            Err(_) => { self.editor.set_error(format!("unknown command {}", input)); }
+        }
     }
 
     #[cfg(windows)]

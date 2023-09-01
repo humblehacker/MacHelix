@@ -47,6 +47,9 @@ struct HelixApp: App {
 
                 Button("Paste") { viewStore.send(.helix(.pasteMenuSelected)) }
                     .keyboardShortcut("v", modifiers: [.command])
+
+                Button("Select All") { viewStore.send(.helix(.selectAllMenuSelected)) }
+                    .keyboardShortcut("a", modifiers: [.command])
             }
             CommandGroup(after: .sidebar) {
                 Toggle("Mouse reporting enabled",

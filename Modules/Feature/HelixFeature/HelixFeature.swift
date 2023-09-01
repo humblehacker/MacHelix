@@ -39,6 +39,7 @@ public struct HelixFeature: Reducer, Sendable {
         case cutMenuSelected
         case copyMenuSelected
         case pasteMenuSelected
+        case selectAllMenuSelected
     }
 
     public var body: some Reducer<State, Action> {
@@ -107,6 +108,9 @@ public struct HelixFeature: Reducer, Sendable {
 
             case .pasteMenuSelected:
                 return .run { send in await ipcManager.sendMessage(":clipboard-paste-before") }
+
+            case .selectAllMenuSelected:
+                return .run { send in await ipcManager.sendMessage("static_command:select_all") }
             }
         }
     }
